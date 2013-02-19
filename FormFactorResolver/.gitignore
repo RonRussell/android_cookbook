@@ -6,6 +6,8 @@
 
 *.pydevproject
 .metadata
+bin/
+gen/
 tmp/
 *.tmp
 *.bak
