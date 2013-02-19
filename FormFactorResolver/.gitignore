@@ -3,11 +3,11 @@
 #################
 ##.project
 ##.classpath
+##bin/
+##gen/
 
 *.pydevproject
 .metadata
-#bin/
-#gen/
 tmp/
 *.tmp
 *.bak
