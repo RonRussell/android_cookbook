@@ -3,15 +3,15 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="com.tco.examples.autolayoutsettings.MySettingsActivity$GeneralPreferenceFragment"
+        android:fragment="com.tco.examples.autolayoutsettings.AutoLayoutSettingsActivity$GeneralPreferenceFragment"
         android:title="@string/pref_header_general" 
         />
     <header
-        android:fragment="com.tco.examples.autolayoutsettings.MySettingsActivity$NotificationPreferenceFragment"
+        android:fragment="com.tco.examples.autolayoutsettings.AutoLayoutSettingsActivity$NotificationPreferenceFragment"
         android:title="@string/pref_header_notifications" 
         />
     <header
-        android:fragment="com.tco.examples.autolayoutsettings.MySettingsActivity$DataSyncPreferenceFragment"
+        android:fragment="com.tco.examples.autolayoutsettings.AutoLayoutSettingsActivity$DataSyncPreferenceFragment"
         android:title="@string/pref_header_data_sync" 
         />
 
