@@ -10,10 +10,24 @@ public class MySettingsActivity extends AutoLayoutSettingsActivity
 {
 
     @Override
-    protected void onConfigurePreferences()
+    protected void onConfigurePreferenceOptions()
     {
         // TODO Auto-generated method stub
         
+    }
+
+    @Override
+    protected void onRequestSimplePreferencesConfiguration()
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    protected int onRequestPreferencesHeaders()
+    {
+        // TODO Auto-generated method stub
+        return 0;
     }
 
     /**
@@ -78,5 +92,6 @@ public class MySettingsActivity extends AutoLayoutSettingsActivity
             bindPreferenceSummaryToValue(findPreference("sync_frequency"));
         }
     }
+
 
 }

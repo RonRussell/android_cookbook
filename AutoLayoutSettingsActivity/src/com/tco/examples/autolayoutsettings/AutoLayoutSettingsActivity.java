@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceActivity.Header;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -29,6 +28,7 @@ import java.util.List;
  * guidelines and the <a href="http://developer.android.com/guide/topics/ui/settings.html">Settings API Guide</a> for
  * more information on developing a Settings UI.
  */
+@SuppressWarnings("deprecation")
 public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
 {
     /**
@@ -38,14 +38,41 @@ public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
     
-    abstract protected void onConfigurePreferences();
+    abstract protected void onConfigurePreferenceOptions();
+    abstract protected void onRequestSimplePreferencesConfiguration();
+    abstract protected int onRequestPreferencesHeaders();
+    
+    
+    public void setAlwaysUseSimplePreferences(boolean alwaysSImple)
+    {
+        
+    }
+    
+    
+    public void setUseSimplePreferencesForPhone(boolean alwaysSImple)
+    {
+        
+    }
+    
+    
+    public void setUseSimplePreferencesForMediumTablet(boolean alwaysSImple)
+    {
+        
+    }
+    
+    
+    public void setUseSimplePreferencesForLargeTablet(boolean alwaysSImple)
+    {
+        
+    }
+    
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState)
     {
         super.onPostCreate(savedInstanceState);
         
-        onConfigurePreferences();
+        onConfigurePreferenceOptions();
 
         setupSimplePreferencesScreen();
     }
