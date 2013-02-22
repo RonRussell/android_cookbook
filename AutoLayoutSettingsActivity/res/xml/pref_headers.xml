@@ -4,14 +4,17 @@
 
     <header
         android:fragment="com.tco.examples.autolayoutsettings.MySettingsActivity$GeneralPreferenceFragment"
+
         android:title="@string/pref_header_general" 
         />
     <header
         android:fragment="com.tco.examples.autolayoutsettings.MySettingsActivity$NotificationPreferenceFragment"
+
         android:title="@string/pref_header_notifications" 
         />
     <header
         android:fragment="com.tco.examples.autolayoutsettings.MySettingsActivity$DataSyncPreferenceFragment"
+
         android:title="@string/pref_header_data_sync" 
         />
 

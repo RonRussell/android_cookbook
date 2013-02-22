@@ -38,6 +38,7 @@ public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
     
+    abstract protected void onConfigurePreferences();
     abstract protected void onConfigurePreferenceOptions();
     abstract protected void onRequestSimplePreferencesConfiguration();
     abstract protected int onRequestPreferencesHeaders();
@@ -72,6 +73,7 @@ public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
     {
         super.onPostCreate(savedInstanceState);
         
+        onConfigurePreferences();
         onConfigurePreferenceOptions();
 
         setupSimplePreferencesScreen();
