@@ -3,6 +3,7 @@ package com.tco.examples.autolayoutsettings;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Point;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -16,8 +17,11 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.view.Display;
 
 import java.util.List;
+
+import com.tco.utils.FormFactorResolver;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On handset devices, settings are presented
@@ -31,51 +35,54 @@ import java.util.List;
 @SuppressWarnings("deprecation")
 public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
 {
+    
+    enum PreferenceLayout
+    {
+        SIMPLE,
+        MULTIPANE
+    };
+    
+    
     /**
      * Determines whether to always show the simplified settings UI, where settings are presented in a single list. When
      * false, settings are shown as a master/detail two-pane view on tablets. When true, a single pane is shown on
      * tablets.
      */
-    private static final boolean ALWAYS_SIMPLE_PREFS = false;
+    private PreferenceParameters _parameters = new PreferenceParameters();
     
-    abstract protected void onConfigurePreferences();
-    abstract protected void onConfigurePreferenceOptions();
-    abstract protected void onRequestSimplePreferencesConfiguration();
+    /**
+     * <p>Called to gather configuration options</p>
+     * 
+     * <p>This method is called to provide derived classes with the opportunity to provide any 
+     * configuration options that are unique to their specific requirements.</p>
+     *  
+     * @see AutoLayoutSettingsActivity#setAlwaysUseSimplePreferences(boolean)
+     * @see AutoLayoutSettingsActivity#setUseSimplePreferencesForPhone(boolean)
+     * @see AutoLayoutSettingsActivity#setUseSimplePreferencesForMediumTablet(boolean)
+     * @see AutoLayoutSettingsActivity#setUseSimplePreferencesForLargeTablet(boolean)
+     *  
+     */
+    abstract protected void onConfigureOptions(PreferenceParameters parameters);
+    abstract protected List<PreferenceSection> onRequestSimplePreferencesConfiguration();
     abstract protected int onRequestPreferencesHeaders();
     
     
-    public void setAlwaysUseSimplePreferences(boolean alwaysSImple)
-    {
-        
-    }
-    
-    
-    public void setUseSimplePreferencesForPhone(boolean alwaysSImple)
-    {
-        
-    }
-    
-    
-    public void setUseSimplePreferencesForMediumTablet(boolean alwaysSImple)
-    {
-        
-    }
-    
-    
-    public void setUseSimplePreferencesForLargeTablet(boolean alwaysSImple)
-    {
-        
-    }
-    
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        onConfigureOptions(_parameters);
+
+        super.onCreate(savedInstanceState);
+        
+    }
+    
+    
     @Override
     protected void onPostCreate(Bundle savedInstanceState)
     {
         super.onPostCreate(savedInstanceState);
         
-        onConfigurePreferences();
-        onConfigurePreferenceOptions();
-
         setupSimplePreferencesScreen();
     }
 
@@ -85,62 +92,39 @@ public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
      */
     private void setupSimplePreferencesScreen()
     {
-        if (!isSimplePreferences(this))
+        if (!useSimplePreferences(this))
         {
             return;
         }
 
         // In the simplified UI, fragments are not used at all and we instead
         // use the older PreferenceActivity APIs.
-
-        /*
-         *  Add an empty preference so that getPreferenceScreen() will return a non null value for 
-         * setting the first header (norally you wouldn't set a header on the first set of preferences, 
-         * but we just want to) 
-         */
-        addPreferencesFromResource(R.xml.pref_empty);
+        List<PreferenceSection> prefs = onRequestSimplePreferencesConfiguration();
         
-        /* Add 'general' preferences. */
-        PreferenceCategory fakeHeader = new PreferenceCategory(this);
-        fakeHeader.setTitle(R.string.pref_header_general);
-        getPreferenceScreen().addPreference(fakeHeader);
-        addPreferencesFromResource(R.xml.pref_general);
-
-        // Add 'notifications' preferences, and a corresponding header.
-        fakeHeader = new PreferenceCategory(this);
-        fakeHeader.setTitle(R.string.pref_header_notifications);
-        getPreferenceScreen().addPreference(fakeHeader);
-        addPreferencesFromResource(R.xml.pref_notification);
-
-        // Add 'data and sync' preferences, and a corresponding header.
-        fakeHeader = new PreferenceCategory(this);
-        fakeHeader.setTitle(R.string.pref_header_data_sync);
-        getPreferenceScreen().addPreference(fakeHeader);
-        addPreferencesFromResource(R.xml.pref_data_sync);
-
-        // Bind the summaries of EditText/List/Dialog/Ringtone preferences to
-        // their values. When their values change, their summaries are updated
-        // to reflect the new value, per the Android Design guidelines.
-        bindPreferenceSummaryToValue(findPreference("example_text"));
-        bindPreferenceSummaryToValue(findPreference("example_list"));
-        bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
-        bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+        for (PreferenceSection pref : prefs)
+        {
+            if (PreferenceSection.NO_TITLE != pref.getTitle())
+            {
+                PreferenceCategory category = new PreferenceCategory(this);
+                category.setTitle(pref.getTitle());
+                getPreferenceScreen().addPreference(category);
+            }
+            
+            addPreferencesFromResource(pref.getPref());
+            for (String bindKey : pref.getBoundValues())
+                bindPreferenceSummaryToValue(findPreference(bindKey));
+            
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean onIsMultiPane()
     {
-        return isXLargeTablet(this) && !isSimplePreferences(this);
+        boolean useSimple = useSimplePreferences(this); 
+        return !useSimple;
     }
 
-    /**
-     * Helper method to determine if the device has an extra-large screen. For example, 10" tablets are extra-large.
-     */
-    private static boolean isXLargeTablet(Context context)
-    {
-        return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
-    }
 
     /**
      * Determines whether the simplified settings UI should be shown. This is true if this is forced via
@@ -148,27 +132,67 @@ public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
      * device doesn't have an extra-large screen. In these cases, a single-pane "simplified" settings UI should be
      * shown.
      */
-    private static boolean isSimplePreferences(Context context)
+    private boolean useSimplePreferences(Context context)
     {
-        return ALWAYS_SIMPLE_PREFS || Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB || !isXLargeTablet(context);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)
+            return true;
+
+        boolean isLandscape = isLandscape();
+        
+        if (FormFactorResolver.isPhoneFormFactor(context))
+        {
+            return _parameters.Phone == PreferenceLayout.SIMPLE;
+        }
+        else if (FormFactorResolver.isMediumTabletFormFactor(context))
+        {
+            return _parameters.MediumTablet == PreferenceLayout.SIMPLE;
+        }
+        else if (FormFactorResolver.isLargeTabletFormFactor(context))
+        {
+            return _parameters.LargeTablet == PreferenceLayout.SIMPLE;
+        }
+        else
+        {
+            return true;
+        }
+        
     }
 
+    
+    private boolean isLandscape()
+    {
+        /* We are intentionally ignoring Configuration.ORIENTATION_SQUARE and Configuration.ORIENTATION_UNDEFINED. 
+         * They are to be considered like Configuration.ORIENTATION_PORTRAIT for our purposes 
+         */
+        
+        Display display = getWindowManager().getDefaultDisplay();
+        
+        Point size = new Point();
+        display.getSize(size);
+        
+        if (size.x > size.y)
+            return true;
+        else
+            return false;
+        
+    }
+    
+    
     /** {@inheritDoc} */
     @Override
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target)
     {
-        if (!isSimplePreferences(this))
+        if (!useSimplePreferences(this))
         {
-            loadHeadersFromResource(R.xml.pref_headers, target);
+            loadHeadersFromResource(onRequestPreferencesHeaders(), target);
         }
     }
 
     /**
      * A preference value change listener that updates the preference's summary to reflect its new value.
      */
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener()
-        {
+    private static Preference.OnPreferenceChangeListener _bindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object value)
             {
@@ -176,22 +200,21 @@ public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
 
                 if (preference instanceof ListPreference)
                 {
-                    // For list preferences, look up the correct display value in
-                    // the preference's 'entries' list.
+                    /* For list preferences, look up the correct display value in the preference's 'entries' list. */
                     ListPreference listPreference = (ListPreference) preference;
                     int index = listPreference.findIndexOfValue(stringValue);
 
-                    // Set the summary to reflect the new value.
+                    /* Set the summary to reflect the new value. */
                     preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
 
                 }
+                
                 else if (preference instanceof RingtonePreference)
                 {
-                    // For ringtone preferences, look up the correct display value
-                    // using RingtoneManager.
+                    /* For ringtone preferences, look up the correct display value using RingtoneManager. */
                     if (TextUtils.isEmpty(stringValue))
                     {
-                        // Empty values correspond to 'silent' (no ringtone).
+                        /* Empty values correspond to 'silent' (no ringtone). */
                         preference.setSummary(R.string.pref_ringtone_silent);
 
                     }
@@ -201,23 +224,22 @@ public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
 
                         if (ringtone == null)
                         {
-                            // Clear the summary if there was a lookup error.
+                            /* Clear the summary if there was a lookup error. */
                             preference.setSummary(null);
                         }
                         else
                         {
-                            // Set the summary to reflect the new ringtone display
-                            // name.
+                            /* Set the summary to reflect the new ringtone display name. */
                             String name = ringtone.getTitle(preference.getContext());
                             preference.setSummary(name);
                         }
                     }
 
                 }
+                
                 else
                 {
-                    // For all other preferences, set the summary to the value's
-                    // simple string representation.
+                    /* For all other preferences, set the summary to the value's simple string representation. */
                     preference.setSummary(stringValue);
                 }
                 return true;
@@ -229,18 +251,43 @@ public abstract class AutoLayoutSettingsActivity extends PreferenceActivity
      * (line of text below the preference title) is updated to reflect the value. The summary is also immediately
      * updated upon calling this method. The exact display format is dependent on the type of preference.
      * 
-     * @see #sBindPreferenceSummaryToValueListener
+     * @see #_bindPreferenceSummaryToValueListener
      */
     protected static void bindPreferenceSummaryToValue(Preference preference)
     {
-        // Set the listener to watch for value changes.
-        preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
+        /* Set the listener to watch for value changes. */
+        preference.setOnPreferenceChangeListener(_bindPreferenceSummaryToValueListener);
 
-        // Trigger the listener immediately with the preference's
-        // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-                                                                 PreferenceManager.getDefaultSharedPreferences(preference.getContext())
-                                                                         .getString(preference.getKey(), ""));
+        /* Trigger the listener immediately with the preference's current value. */
+        _bindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
     }
+    
 
+    public class PreferenceParameters
+    {
+
+        public PreferenceLayout Phone = PreferenceLayout.SIMPLE;
+        public PreferenceLayout MediumTablet = PreferenceLayout.SIMPLE;
+        public PreferenceLayout LargeTablet = PreferenceLayout.MULTIPANE;
+        
+        public PreferenceParameters()
+        {
+        }
+        
+        public PreferenceParameters(PreferenceParameters other)
+        {
+            Phone = other.Phone;
+            MediumTablet = other.MediumTablet;
+            LargeTablet = other.LargeTablet;
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
