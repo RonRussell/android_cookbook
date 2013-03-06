@@ -43,7 +43,7 @@ public class FormFactorResolver
     /**
      * Determine whether or not this device is likely to have the form factor of a phone 
      */
-    public static boolean isPhoneFormFactor(Context context)
+    public static boolean isHandsetFormFactor(Context context)
     {
         return getScreenLayoutSize(context) < Configuration.SCREENLAYOUT_SIZE_LARGE;
     }

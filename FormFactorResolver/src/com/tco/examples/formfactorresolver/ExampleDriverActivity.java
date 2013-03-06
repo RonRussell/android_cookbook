@@ -86,7 +86,7 @@ public class ExampleDriverActivity extends Activity
         
         FormFactorResolver.dump(this);
         
-        if (FormFactorResolver.isPhoneFormFactor(this))
+        if (FormFactorResolver.isHandsetFormFactor(this))
             ((TextView)contentView).setText("Screen form factor : PHONE");
         else if (FormFactorResolver.isMediumTabletFormFactor(this))
             ((TextView)contentView).setText("Screen form factor : MEDIUM TABLET");
